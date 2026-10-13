@@ -5,30 +5,48 @@ from fastapi import Depends, FastAPI, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.database import create_database, get_session
-from app.models import Base, Item
-from app.schemas import ItemCreate, ItemRead, ItemUpdate
+from app.database import Database
+from app.models import Base, Item, Product
+from app.schemas import ItemCreate, ItemRead, ItemUpdate, ProductCreate, ProductRead
+from app.seed import seed_products
 
 
 def create_app(database_url: str | None = None) -> FastAPI:
-    engine, session_factory = create_database(database_url)
+    database = Database(database_url)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        Base.metadata.create_all(bind=engine)
+        Base.metadata.create_all(bind=database.engine)
+        seed_products(database.session_factory)
         yield
-        engine.dispose()
+        database.dispose()
 
     app = FastAPI(title="Imtiaz API", lifespan=lifespan)
 
     def session_dependency():
-        yield from get_session(session_factory)
+        yield from database.get_session()
 
     SessionDependency = Annotated[Session, Depends(session_dependency)]
 
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.post(
+        "/products",
+        response_model=ProductRead,
+        status_code=status.HTTP_201_CREATED,
+    )
+    def create_product(payload: ProductCreate, session: SessionDependency) -> Product:
+        product = Product(**payload.model_dump())
+        session.add(product)
+        session.commit()
+        session.refresh(product)
+        return product
+
+    @app.get("/products", response_model=list[ProductRead])
+    def list_products(session: SessionDependency) -> list[Product]:
+        return list(session.scalars(select(Product).order_by(Product.id)))
 
     @app.post("/items", response_model=ItemRead, status_code=status.HTTP_201_CREATED)
     def create_item(payload: ItemCreate, session: SessionDependency) -> Item:
