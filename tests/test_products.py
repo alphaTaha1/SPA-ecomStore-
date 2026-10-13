@@ -68,6 +68,11 @@ def test_create_and_list_products(tmp_path):
     app = create_app(f"sqlite:///{tmp_path / 'product-api.db'}")
 
     with TestClient(app) as client:
+        root = client.get("/")
+        assert root.status_code == 200
+        assert root.json()["products"] == "/products"
+        assert root.json()["docs"] == "/docs"
+
         created = client.post(
             "/products",
             json={

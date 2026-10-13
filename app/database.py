@@ -11,9 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 def create_database(database_url: str | None = None):
     load_dotenv(Path.cwd() / ".env")
 
-    url = database_url or os.getenv(
-        "DATABASE_URL", "sqlite:///./app.db"
-    )
+    url = database_url or os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
     connect_args = (
         {"check_same_thread": False}

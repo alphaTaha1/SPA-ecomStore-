@@ -28,6 +28,14 @@ def create_app(database_url: str | None = None) -> FastAPI:
 
     SessionDependency = Annotated[Session, Depends(session_dependency)]
 
+    @app.get("/")
+    def root() -> dict[str, str]:
+        return {
+            "message": "Product API is running",
+            "docs": "/docs",
+            "products": "/products",
+        }
+
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
