@@ -2,6 +2,14 @@
 
 A monolithic Flask backend with SQLite storage for product creation and listing.
 
+The single Flask application is organized by responsibility:
+
+- `models/` contains product table creation and database queries.
+- `services/` contains product validation and business operations.
+- `controllers/` contains the product HTTP endpoints.
+- `utility/` contains shared SQLite connection and lifecycle helpers.
+- `app.py` creates the Flask app and registers the controller.
+
 ## Setup
 
 ```powershell

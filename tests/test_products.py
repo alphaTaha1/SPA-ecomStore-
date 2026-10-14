@@ -3,12 +3,17 @@ import unittest
 from pathlib import Path
 
 from app import create_app
+from services.product_service import ProductValidationError, create_product
 
 
 class ProductCreationTests(unittest.TestCase):
     def setUp(self):
         self.app = create_app({"TESTING": True, "DATABASE": ":memory:"})
         self.client = self.app.test_client()
+
+    def test_product_service_rejects_missing_required_fields(self):
+        with self.assertRaises(ProductValidationError):
+            create_product({"price": 29.99})
 
     def test_creating_a_product_returns_the_created_product(self):
         response = self.client.post(
